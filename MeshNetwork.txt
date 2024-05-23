@@ -28,7 +28,7 @@ void delayReceivedCallback(uint32_t from, int32_t delay);
 void displayJsonTopology();
 void handleSendMessage(String msg);
 void handleBroadcastMessage(String msg);
-
+void ChangeLEDcolor(String HexColorID)
 
 Scheduler userScheduler; // to control your personal task
 painlessMesh mesh;
@@ -141,6 +141,11 @@ void sendMessage() {
 
 void receivedCallback(uint32_t from, String & msg) {
   Serial.printf("Received from %u msg=%s\n", from, msg.c_str());
+  int colorIndex = msg.indexOf("|Color:");
+  if (colorIndex != -1) {
+    String hexColorId = msg.substring(colorIndex + 7); // Skip over "|Color:"
+    changeLEDColor(hexColorId);
+  }
 }
 
 void newConnectionCallback(uint32_t nodeId) {
@@ -176,20 +181,30 @@ void displayJsonTopology() {
 
 void handleSendMessage(String msg) {
   int firstSpace = msg.indexOf(' ', 13);
-  int secondSpace = msg.indexOf(' ', firstSpace + 1); //Send_Message 1234567890123456 #FF000
+  int secondSpace = msg.indexOf(' ', firstSpace + 1); //Send_Message NodeID 1234567890123456 #FF000 //format
   String nodeId = msg.substring(13, firstSpace);
   String message = msg.substring(firstSpace + 1, secondSpace);
   String hexColorId = msg.substring(secondSpace + 1);
-  String fullMessage = "NodeID " + nodeId + " says: " + message;
+  String fullMessage = "NodeID " + nodeId + " says: " + message + "|Color:" + hexColorId;
   mesh.sendSingle(nodeId.toInt(), fullMessage);
-  Serial.printf("Message %s with color %s to nodeID %d", message, hexColorId, nodeId);
-
+  Serial.printf("Message %s with color %s to nodeID %d\n", message.c_str(), hexColorId.c_str(), nodeId.toInt());
 }
 
 void handleBroadcastMessage(String msg) {
   int firstSpace = msg.indexOf(' ', 18);
   String message = msg.substring(18, firstSpace);
   String hexColorId = msg.substring(firstSpace + 1);
-  String fullMessage = "Broadcast: " + message;
+  String fullMessage = "Broadcast: " + message + "|Color:" + hexColorId;
   mesh.sendBroadcast(fullMessage);
+}
+
+void changeLEDColor(String hexColorId) {
+  long number = strtol(&hexColorId[1], NULL, 16); // Convert hex to long
+  int r = number >> 16;                           // First 2 digits of long
+  int g = number >> 8 & 0xFF;                     // Middle 2 digits of long
+  int b = number & 0xFF;                          // Last 2 digits of long
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CRGB(r, g, b);
+  }
+  FastLED.show();
 }
