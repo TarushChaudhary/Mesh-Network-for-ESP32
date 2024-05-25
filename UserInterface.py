@@ -82,6 +82,21 @@ def handle_debug_mode(command):
             break
         ser.write((debug_command + '\n').encode('utf-8'))
 
+def handle_list_colors(command):
+    colors = {
+        "Red": "#FF0000",
+        "Green": "#00FF00",
+        "Blue": "#0000FF",
+        "Yellow": "#FFFF00",
+        "Cyan": "#00FFFF",
+        "Magenta": "#FF00FF",
+        "White": "#FFFFFF",
+        "Black": "#000000"
+    }
+    print("Available colors and their hex codes:")
+    for color, code in colors.items():
+        print(f"{color}: {code}")
+
 def handle_unknown_command(command):
     print("Unknown command. Available commands: Send_Message, Broadcast_Message, ShowMessage, List_Nodes, DebugMode")
 
@@ -91,6 +106,7 @@ command_handlers = {
     "ShowMessage": handle_show_message,
     "List_Nodes": handle_list_nodes,
     "DebugMode": handle_debug_mode,
+    "List_Colors": handle_list_colors
 }
 
 # Set up the serial connection
